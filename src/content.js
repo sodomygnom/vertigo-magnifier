@@ -161,25 +161,20 @@ class HoveredMediaWatcher {
       }
     }
 
-    const findHoveredMediaElement = (tags = ['video', 'img', 'div']) => {
-      const tag = tags[0];
-      if (!tag) return null;
-      let mediaElements = Array.from(document.querySelectorAll(tag)).reverse();
-      if (tag === 'div') mediaElements = mediaElements.filter(e => e.style.backgroundImage.length > 0);
-
+    const findHoveredMediaElement = () => {
       const res = [];
+      const mediaElements = Array.from(document.querySelectorAll('video,img,div')).reverse();
       for (const mediaElement of mediaElements) {
+        if (mediaElement.tagName === 'DIV' && !(mediaElement.style.backgroundImage.length > 0)) continue;
         if (!this.isVisible(mediaElement)) continue;
         const { x, y } = getMousePosPercentage(mediaElement, this.mouse.event);
         if (x > 0 && x < 100 && y > 0 && y < 100) {
-          // return { x, y, mediaElement };
           res.push({ x, y, mediaElement });
         }
       }
-
       if (res.length === 1) return res[0];
       if (res.length > 1) return this.findTopmost(res);
-      return findHoveredMediaElement(tags.slice(1));
+      return {};
     }
 
     const res = findHoveredMediaElement();
