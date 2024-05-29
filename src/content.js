@@ -11,6 +11,10 @@ const Logo = `⠡⠡⠡⠡⠡⣡⣥⡡⠡⠡⠡⠡⢡⣡⡥⠡⡑⡑⢕⢕
 
 const DEFAULT_CONTROL_KEY = 'Shift';
 
+function clamp(number, min, max) {
+  return Math.max(min, Math.min(number, max));
+}
+
 function keyPressed_(keyName) {
   const state = { pressed: false };
 
@@ -141,7 +145,7 @@ class HoveredMediaWatcher {
     document.addEventListener('mouseover', (e) => {
       if (e.target.tagName === 'IMG' ||
         e.target.tagName === 'VIDEO' ||
-        e.target.style.backgroundImage.length > 0) {
+        this.hasBackgroundImage(e.target)) {
         this.hoveredMedia_ = e.target;
       }
     });
@@ -151,6 +155,10 @@ class HoveredMediaWatcher {
         this.hoveredMedia_ = null;
       }
     });
+  }
+
+  hasBackgroundImage(e) {
+    return e.style.backgroundImage.includes('url');
   }
 
   findHoveredMedia = () => {
@@ -165,7 +173,7 @@ class HoveredMediaWatcher {
       const res = [];
       const mediaElements = Array.from(document.querySelectorAll('video,img,div')).reverse();
       for (const mediaElement of mediaElements) {
-        if (mediaElement.tagName === 'DIV' && !(mediaElement.style.backgroundImage.length > 0)) continue;
+        if (mediaElement.tagName === 'DIV' && !this.hasBackgroundImage(mediaElement)) continue;
         if (!this.isVisible(mediaElement)) continue;
         const { x, y } = getMousePosPercentage(mediaElement, this.mouse.event);
         if (x > 0 && x < 100 && y > 0 && y < 100) {
@@ -211,11 +219,6 @@ class Gestures {
     this.scrollFactor = e.deltaY < 0 ? 1 : -1;
     this.notify();
   }
-}
-
-function copyNodeStyle(sourceNode, targetNode) {
-  const computedStyle = window.getComputedStyle(sourceNode);
-  Array.from(computedStyle).forEach(key => targetNode.style.setProperty(key, computedStyle.getPropertyValue(key), computedStyle.getPropertyPriority(key)))
 }
 
 class MediaTransform {
@@ -291,9 +294,8 @@ class MediaTransform {
       if (deg === 270) { x_ = 100 - y; y_ = x; }
       if (deg === 180) { x_ = 100 - x; y_ = 100 - y; }
       if (mirror) { x_ = 100 - x; };
-      const clamp = (n) => Math.max(15, Math.min(n, 85));
-      x_ = clamp(x_);
-      y_ = clamp(y_);
+      x_ = clamp(x_, 15, 85);
+      y_ = clamp(y_, 15, 85);
       this.ZOOM_STEP = 0.033;
     } else {
       this.ZOOM_STEP = 0.2;
@@ -322,7 +324,6 @@ function createOverflow(el) {
     box.style.height = '100vh';
     box.style.overflow = 'hidden';
     box.style.margin = '0px';
-    // box.style.backgroundColor = '#000';
     box.style.backdropFilter = 'blur(50px)';
     return box;
   }
@@ -361,7 +362,7 @@ function createOverflow(el) {
       el.style.setProperty(k, captureStyle[k]);
     })
 
-    const transformElBack = () => {
+    const restoreElement = () => {
       Object.keys(captureStyle).forEach(k => {
         if (tempStyle[k]) {
           el.style.setProperty(k, tempStyle[k]);
@@ -372,7 +373,7 @@ function createOverflow(el) {
     }
 
     return {
-      transformElBack
+      restoreElement
     }
   }
 
@@ -382,11 +383,11 @@ function createOverflow(el) {
   absoluteBox.append(realtiveBox);
   const originalParent = el.parentElement;
   realtiveBox.append(el);
-  const { transformElBack } = transformElToAbsolute(el);
+  const { restoreElement } = transformElToAbsolute(el);
 
   return {
     removeOverflow: () => {
-      transformElBack();
+      restoreElement();
       originalParent.append(el);
       absoluteBox.remove();
     }
@@ -407,7 +408,7 @@ function init() {
     }
 
     if (msg.screenshot_ok) {
-      downloadURI(msg.uri, `${mediaElementName || document.title}.png`);
+      // downloadURI(msg.uri, `${mediaElementName || document.title}.png`);
       captureCallback();
       mediaElementName = undefined;
     }
