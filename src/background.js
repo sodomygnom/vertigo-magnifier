@@ -47,10 +47,12 @@ function googleImageSearch(uri, width, height) {
   formData.append('processed_image_dimensions', `${width},${height}`);
   const url = "https://lens.google.com/v3/upload?vpw=1280&vph=540";
   const parseURL = (str) => {
+    console.log('test', str.match(/\/search?.*/g)[1])
     return str.match(/\/search?.*/g)[1]
       .replace(/[\\]+u003d/g, '=')
       .replace(/[\\]+u0026/g, '&')
-      .replace(/%3D.*/, () => '');
+      .replace(/%3D.*/, () => '')
+      .replace(/&quot.*/, () => '');
   }
   return fetch(url, { body: formData, method: 'post' }).then(async res => {
     const str = await res.text();
@@ -65,17 +67,24 @@ function captureTab(tabId, options = {}) {
 browser.runtime.onMessage.addListener((msg, sender) => {
   if (msg.captureRect) {
     captureTab(sender.tab.id, { rect: msg.rect }).then((uri) => {
-      browser.tabs.sendMessage(sender.tab.id, { from: "background", uri, screenshot_ok: true });
-      googleImageSearch(uri, msg.rect.width, msg.rect.height).then(redirectURL => {
-        console.log(redirectURL);
-        browser.tabs.create({ url: redirectURL })
-      });
+      if (msg.search) {
+        browser.tabs.sendMessage(sender.tab.id, { from: "background", uri, search_ok: true });
+        googleImageSearch(uri, msg.rect.width, msg.rect.height).then(redirectURL => {
+          console.log(redirectURL);
+          browser.tabs.create({ url: redirectURL })
+        });
+      } else {
+        browser.tabs.sendMessage(sender.tab.id, { from: "background", uri, screenshot_ok: true });
+      }
     });
   }
 });
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
   switch (info.menuItemId) {
+    case "search":
+      browser.tabs.sendMessage(tab.id, { from: "background", search: true });
+      break;
     case "screenshot":
       browser.tabs.sendMessage(tab.id, { from: "background", screenshot: true });
       break;

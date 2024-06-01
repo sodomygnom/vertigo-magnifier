@@ -69,8 +69,12 @@ function traversParents(el, callback, depth = 10) {
   }
 }
 
+const WebsiteExceptions = ["youtube", "youtu.be"];
+
 // https://stackoverflow.com/questions/21335136/how-to-re-enable-right-click-so-that-i-can-inspect-html-elements-in-chrome
 function fixContextMenu() {
+  if (WebsiteExceptions.some(w => window.location.origin.includes(w))) return;
+
   function enableContextMenu() {
     void ((() => { document.body.oncontextmenu = null })());
     enableRightClickLight(document);
@@ -381,14 +385,26 @@ function createOverflow(el) {
   const realtiveBox = createRelativeBox();
   document.body.append(absoluteBox);
   absoluteBox.append(realtiveBox);
-  const originalParent = el.parentElement;
+
+  let putElementBack;
+  if (el.nextElementSibling) {
+    const next = el.nextElementSibling;
+    putElementBack = () => next.before(el);
+  } else if (el.previousElementSibling) {
+    const prev = el.previousElementSibling;
+    putElementBack = () => prev.after(el);
+  } else {
+    const parent = el.parentElement;
+    putElementBack = () => parent.append(el);
+  }
+
   realtiveBox.append(el);
   const { restoreElement } = transformElToAbsolute(el);
 
   return {
     removeOverflow: () => {
       restoreElement();
-      originalParent.append(el);
+      putElementBack();
       absoluteBox.remove();
     }
   }
@@ -407,12 +423,14 @@ function init() {
       mediaTransform.resetAllMedia();
     }
 
-    if (msg.screenshot_ok) {
-      // downloadURI(msg.uri, `${mediaElementName || document.title}.png`);
+    if (msg.screenshot_ok || msg.search_ok) {
+      if (msg.screenshot_ok) {
+        downloadURI(msg.uri, `${mediaElementName || document.title}.png`);
+      }
       captureCallback();
       mediaElementName = undefined;
     }
-    if (msg.screenshot) {
+    if (msg.screenshot || msg.search) {
       const { mediaElement } = hoveredMediaWatcher.findHoveredMedia();
       if (mediaElement) {
         mediaElementName = mediaElement.title || mediaElement.alt;
@@ -423,7 +441,7 @@ function init() {
         y = Math.max(y, 0);
         width = Math.min(width, window.innerWidth);
         height = Math.min(height, window.innerHeight);
-        browser.runtime.sendMessage({ captureRect: true, rect: { x, y, width, height } });
+        browser.runtime.sendMessage({ captureRect: true, search: msg.search, rect: { x, y, width, height } });
       }
     }
 
