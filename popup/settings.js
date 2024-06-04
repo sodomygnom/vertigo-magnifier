@@ -4,9 +4,9 @@ const keyHelp = document.querySelector('#key-help');
 
 const resetTransformsButton = document.querySelector('#reset-all-transforms');
 
-const rightClickCancelationButton = document.querySelector('#right-click');
-const rightClickCancelationState = document.querySelector('#right-click-state');
-const rightClickCancelationHelp = document.querySelector('#right-click-help');
+const rightClickCancellationButton = document.querySelector('#right-click');
+const rightClickCancellationState = document.querySelector('#right-click-state');
+const rightClickCancellationHelp = document.querySelector('#right-click-help');
 
 
 async function getTab() {
@@ -24,7 +24,7 @@ async function checkRightClickState() {
   const origin = await getOrigin();
   await browser.storage.sync.get([origin]).then((res) => {
     const hasOrigin = Object.hasOwn(res, origin);
-    rightClickCancelationState.innerText = hasOrigin ? '❌' : '✔️';
+    rightClickCancellationState.innerText = hasOrigin ? '❌' : '✔️';
   });
 };
 
@@ -41,10 +41,10 @@ async function switchRightClickState() {
 
 window.addEventListener('focus', checkRightClickState);
 
-rightClickCancelationButton.addEventListener('click', async () => {
+rightClickCancellationButton.addEventListener('click', async () => {
   await switchRightClickState()
   await checkRightClickState();
-  rightClickCancelationHelp.style.opacity = '1';
+  rightClickCancellationHelp.style.opacity = '1';
 });
 
 keyChangeButton.addEventListener('click', () => {

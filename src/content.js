@@ -70,14 +70,14 @@ function traversParents(el, callback, depth = 10) {
 }
 
 
-function disableRightClickCancelation() {
+function disableRightClickCancellation() {
   const { origin } = window.location;
   return browser.storage.sync.get([origin]).then((res) => Object.hasOwn(res, origin));
 }
 
 // https://stackoverflow.com/questions/21335136/how-to-re-enable-right-click-so-that-i-can-inspect-html-elements-in-chrome
 async function fixContextMenu() {
-  const shouldCancelRightClick = await disableRightClickCancelation();
+  const shouldCancelRightClick = await disableRightClickCancellation();
   if (shouldCancelRightClick) return;
 
   function enableContextMenu() {
@@ -415,6 +415,28 @@ function createOverflow(el) {
   }
 }
 
+function sync() {
+  function setKey() {
+    browser.storage.local.get(["controlKey"]).then((result) => {
+      gestures.setControlKey(result?.controlKey || DEFAULT_CONTROL_KEY);
+    });
+  }
+  setKey();
+
+  browser.storage.onChanged.addListener(() => {
+    setKey();
+  });
+}
+
+function getScreenShotData(mediaElement) {
+  let { x, y, width, height } = mediaElement.getBoundingClientRect();
+  x = Math.max(x, 0);
+  y = Math.max(y, 0);
+  width = Math.min(width, window.innerWidth);
+  height = Math.min(height, window.innerHeight);
+  return { x, y, width, height };
+}
+
 function init() {
   fixContextMenu();
   const mediaTransform = new MediaTransform();
@@ -423,11 +445,7 @@ function init() {
 
   let captureCallback;
   let mediaElementName;
-  browser.runtime.onMessage.addListener((msg, sender) => {
-    if (msg.reset) {
-      mediaTransform.resetAllMedia();
-    }
-
+  browser.runtime.onMessage.addListener((msg) => {
     if (msg.screenshot_ok || msg.search_ok) {
       if (msg.screenshot_ok) {
         downloadURI(msg.uri, `${mediaElementName || document.title}.png`);
@@ -441,13 +459,13 @@ function init() {
         mediaElementName = mediaElement.title || mediaElement.alt;
         const { removeOverflow } = createOverflow(mediaElement);
         captureCallback = removeOverflow;
-        let { x, y, width, height } = mediaElement.getBoundingClientRect();
-        x = Math.max(x, 0);
-        y = Math.max(y, 0);
-        width = Math.min(width, window.innerWidth);
-        height = Math.min(height, window.innerHeight);
-        browser.runtime.sendMessage({ captureRect: true, search: msg.search, rect: { x, y, width, height } });
+        const rect = getScreenShotData(mediaElement);
+        browser.runtime.sendMessage({ captureRect: true, search: msg.search, rect });
       }
+    }
+
+    if (msg.reset) {
+      mediaTransform.resetAllMedia();
     }
 
     if (msg.transform) {
@@ -471,21 +489,9 @@ function init() {
         mediaTransform.brightness(mediaElement, -25);
       }
     }
-
   });
 
-  (function sync() {
-    function setKey() {
-      browser.storage.local.get(["controlKey"]).then((result) => {
-        gestures.setControlKey(result?.controlKey || DEFAULT_CONTROL_KEY);
-      });
-    }
-    setKey();
-
-    browser.storage.onChanged.addListener(() => {
-      setKey();
-    });
-  })();
+  sync();
 
   gestures.subscribe((zoomFactor) => {
     const { x, y, mediaElement } = hoveredMediaWatcher.findHoveredMedia();
