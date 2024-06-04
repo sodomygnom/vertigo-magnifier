@@ -7,6 +7,8 @@ main {
   background: radial-gradient(circle at 50% 15%, rgba(230, 100, 101, 0.15), rgba(145, 152, 229, 0.25));
   background-color: aliceblue;
   padding: 3rem;
+  position: relative;
+  overflow: hidden;
 }
 
 main button {
@@ -19,10 +21,15 @@ main p {
 }
 
 main #logo {
-  font-size: 4rem;
+  font-size: 40rem;
+  position: absolute;
+  z-index: -1;
+  filter: blur(30px);
+  left: -50%;
+  top: -90%;
 }
 
-main #help {
+main #key-help, #right-click-help {
   font-size: 2rem;
   opacity: 0;
 }

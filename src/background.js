@@ -45,9 +45,8 @@ function googleImageSearch(uri, width, height) {
   const formData = new FormData();
   formData.append('encoded_image', dataURItoBlob(uri), "Image");
   formData.append('processed_image_dimensions', `${width},${height}`);
-  const url = "https://lens.google.com/v3/upload?vpw=1280&vph=540";
+  const url = `https://lens.google.com/v3/upload?vpw=${width}&vph=${height}`;
   const parseURL = (str) => {
-    console.log('test', str.match(/\/search?.*/g)[1])
     return str.match(/\/search?.*/g)[1]
       .replace(/[\\]+u003d/g, '=')
       .replace(/[\\]+u0026/g, '&')
@@ -70,7 +69,7 @@ browser.runtime.onMessage.addListener((msg, sender) => {
       if (msg.search) {
         browser.tabs.sendMessage(sender.tab.id, { from: "background", uri, search_ok: true });
         googleImageSearch(uri, msg.rect.width, msg.rect.height).then(redirectURL => {
-          console.log(redirectURL);
+          //console.log(redirectURL);
           browser.tabs.create({ url: redirectURL })
         });
       } else {

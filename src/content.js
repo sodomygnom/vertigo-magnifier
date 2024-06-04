@@ -69,11 +69,16 @@ function traversParents(el, callback, depth = 10) {
   }
 }
 
-const WebsiteExceptions = ["youtube", "youtu.be"];
+
+function disableRightClickCancelation() {
+  const { origin } = window.location;
+  return browser.storage.sync.get([origin]).then((res) => Object.hasOwn(res, origin));
+}
 
 // https://stackoverflow.com/questions/21335136/how-to-re-enable-right-click-so-that-i-can-inspect-html-elements-in-chrome
-function fixContextMenu() {
-  if (WebsiteExceptions.some(w => window.location.origin.includes(w))) return;
+async function fixContextMenu() {
+  const shouldCancelRightClick = await disableRightClickCancelation();
+  if (shouldCancelRightClick) return;
 
   function enableContextMenu() {
     void ((() => { document.body.oncontextmenu = null })());
