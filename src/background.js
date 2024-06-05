@@ -82,13 +82,13 @@ browser.runtime.onMessage.addListener((msg, sender) => {
 browser.contextMenus.onClicked.addListener((info, tab) => {
   switch (info.menuItemId) {
     case "search":
-      browser.tabs.sendMessage(tab.id, { from: "background", search: true });
+      browser.tabs.sendMessage(tab.id, { search: true });
       break;
     case "screenshot":
-      browser.tabs.sendMessage(tab.id, { from: "background", screenshot: true });
+      browser.tabs.sendMessage(tab.id, { screenshot: true });
       break;
     default:
-      browser.tabs.sendMessage(tab.id, { from: "background", transform: true, [info.menuItemId]: true });
+      browser.tabs.sendMessage(tab.id, { transform: info.menuItemId });
       break;
   }
 });

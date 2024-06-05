@@ -236,6 +236,32 @@ class MediaTransform {
     this.attrname = 'zoom-ext';
   }
 
+  handleCommand(msg, mediaElement) {
+    switch (msg) {
+      case 'mirror':
+        this.mirror(mediaElement);
+        break;
+      case 'invert':
+        this.invert(mediaElement);
+        break;
+      case 'rotate-right':
+        this.rotate(mediaElement, 90);
+        break;
+      case 'rotate-left':
+        this.rotate(mediaElement, -90);
+        break;
+      case 'brightness-inc':
+        this.brightness(mediaElement, 25);
+        break;
+      case 'brightness-dec':
+        this.brightness(mediaElement, -25);
+        break;
+      default:
+        break;
+    }
+  }
+
+
   resetAllMedia() {
     document.querySelectorAll(`[${this.attrname}]`).forEach(el => {
       el.style.transform = "";
@@ -415,7 +441,7 @@ function createOverflow(el) {
   }
 }
 
-function sync() {
+function sync(gestures) {
   function setKey() {
     browser.storage.local.get(["controlKey"]).then((result) => {
       gestures.setControlKey(result?.controlKey || DEFAULT_CONTROL_KEY);
@@ -470,28 +496,11 @@ function init() {
 
     if (msg.transform) {
       const { mediaElement } = hoveredMediaWatcher.findHoveredMedia();
-      if (msg.mirror) {
-        mediaTransform.mirror(mediaElement);
-      }
-      if (msg.invert) {
-        mediaTransform.invert(mediaElement);
-      }
-      if (msg['rotate-right']) {
-        mediaTransform.rotate(mediaElement, 90);
-      }
-      if (msg['rotate-left']) {
-        mediaTransform.rotate(mediaElement, -90);
-      }
-      if (msg["brightness-inc"]) {
-        mediaTransform.brightness(mediaElement, 25);
-      }
-      if (msg["brightness-dec"]) {
-        mediaTransform.brightness(mediaElement, -25);
-      }
+      mediaTransform.handleCommand(msg.transform, mediaElement);
     }
   });
 
-  sync();
+  sync(gestures);
 
   gestures.subscribe((zoomFactor) => {
     const { x, y, mediaElement } = hoveredMediaWatcher.findHoveredMedia();
