@@ -77,7 +77,6 @@ function enableRightClickCancellation() {
 
 // https://stackoverflow.com/questions/21335136/how-to-re-enable-right-click-so-that-i-can-inspect-html-elements-in-chrome
 async function fixContextMenu() {
-  console.log('test');
   const shouldCancelRightClick = await enableRightClickCancellation();
   if (!shouldCancelRightClick) return;
 
