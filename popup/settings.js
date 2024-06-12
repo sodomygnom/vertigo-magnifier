@@ -24,7 +24,7 @@ async function checkRightClickState() {
   const origin = await getOrigin();
   await browser.storage.sync.get([origin]).then((res) => {
     const hasOrigin = Object.hasOwn(res, origin);
-    rightClickCancellationState.innerText = hasOrigin ? '❌' : '✔️';
+    rightClickCancellationState.innerText = hasOrigin ? '✔️' : '❌';
   });
 };
 

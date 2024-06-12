@@ -26,6 +26,9 @@
       },
       "suspicious": {
         "noRedundantUseStrict": "off"
+      },
+      "style": {
+        "useNumberNamespace": "off"
       }
     }
   }

@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
   "name": "Vertigo Magnifier",
-  "description": "Zoom any video/image on any website with shift+wheel",
-  "version": "2.1",
+  "description": "Zoom video/image with shift+wheel",
+  "version": "2.1.1",
   "author": "sodomygnom",
 
   "icons": {

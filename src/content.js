@@ -70,15 +70,16 @@ function traversParents(el, callback, depth = 10) {
 }
 
 
-function disableRightClickCancellation() {
+function enableRightClickCancellation() {
   const { origin } = window.location;
   return browser.storage.sync.get([origin]).then((res) => Object.hasOwn(res, origin));
 }
 
 // https://stackoverflow.com/questions/21335136/how-to-re-enable-right-click-so-that-i-can-inspect-html-elements-in-chrome
 async function fixContextMenu() {
-  const shouldCancelRightClick = await disableRightClickCancellation();
-  if (shouldCancelRightClick) return;
+  console.log('test');
+  const shouldCancelRightClick = await enableRightClickCancellation();
+  if (!shouldCancelRightClick) return;
 
   function enableContextMenu() {
     void ((() => { document.body.oncontextmenu = null })());
